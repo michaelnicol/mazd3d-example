@@ -1,6 +1,6 @@
 import * as three from "three"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
-import Maze3D from "./maze3d-es"
+import Maze3D from "maze3d/maze3d-es-node"
 
 const container = document.getElementById("app")
 const scene = new three.Scene()
@@ -54,6 +54,7 @@ const constraints = {
 
 const clientMaze = new Maze3D(constraints)
 clientMaze.generateMazeTemplate()
+clientMaze.generateMazeBarriers()
 while (clientMaze.path.length === 0){
   try {
      clientMaze.solveMaze([0,0,0], [constraints.depth-1, constraints.height-1,constraints.width-1])
@@ -66,40 +67,39 @@ while (clientMaze.path.length === 0){
       }
    }
 }
+console.log(clientMaze)
 
-
-
-// const modelOptions = {
-//   geometry: new three.BoxGeometry(1, 1, 1),
-//   instance: true,
-//   barrier: {
-//      generate: true,
-//      opacity: 1.0,
-//      color: 0x0000ff
-//   },
-//   space: {
-//      generate: false,
-//      opacity: 1.0,
-//      color: 0xff0000
-//   },
-//   path: {
-//      generate: true,
-//      opacity: 1.0,
-//      color: 0x00ff00
-//   },
-//   void: {
-//      generate: false,
-//      opacity: 1.0,
-//      color: 0x634f4f
-//   },
-//   map: {
-//      generate: false,
-//      opacity: 1.0,
-//      color: 0xf1f10f
-//   }
-// };
-// clientMaze.generateModel(modelOptions)
-// clientMaze.modelAPI("addModel", scene)
+const modelOptions = {
+  geometry: new three.BoxGeometry(1, 1, 1),
+  instance: true,
+  barrier: {
+     generate: true,
+     opacity: 1.0,
+     color: 0x0000ff
+  },
+  space: {
+     generate: false,
+     opacity: 1.0,
+     color: 0xff0000
+  },
+  path: {
+     generate: true,
+     opacity: 1.0,
+     color: 0x00ff00
+  },
+  void: {
+     generate: false,
+     opacity: 1.0,
+     color: 0x634f4f
+  },
+  map: {
+     generate: false,
+     opacity: 1.0,
+     color: 0xf1f10f
+  }
+};
+clientMaze.generateModel(modelOptions)
+clientMaze.modelAPI("addModel", scene)
 
 
 const lightOptions = {
@@ -119,108 +119,11 @@ const lightOptions = {
   }
 };
 Object.assign(lightOptions, clientMaze.getCornerSpotLightData());
- 
-const animationOptions = {
-   animationMesh: {
-     useCustom: true,
-     custom: {
-       geometry: new three.BoxGeometry(1, 1, 1),
-       barrier: { color: 0x0000ff, opacity: 1.0 },
-       space: { color: 0xff0000, opacity: 1.0 },
-       path: { color: 0x00ff00, opacity: 1.0 },
-       void: { color: 0x634f4f, opacity: 1.0 },
-       map: { color: 0xf1f10f, opacity: 1.0 }
-     }
-   },
-   groupOrder: [["barrier", "space", "void"], ["map"], ["path"]],
-   groupDelay: 1,
-   barrier: {
-     animationSlice: "height-layer",
-     animationSliceOffset: 0, 
-     animationSliceDuration: 0.5,
-     entrence: {
-       type: "visible",
-       distance: new three.Vector3(100, 100, 100)
-     },
-     exit: {
-       type: "visible", 
-       order: "instant", 
-       exitDelay: 0,
-       distance: new three.Vector3(0, -100, 0)
-     }
-   },
-   space: {
-     animationSlice: "height-layer", 
-     animationSliceOffset: 0, 
-     animationSliceDuration: 0.5,
-     entrence: {
-       type: "visible", 
-       distance: new three.Vector3(0, 100, 0)
-     },
-     exit: {
-       type: "invisible", 
-       order: "instant", 
-       exitDelay: 0,
-       distance: new three.Vector3(0, -100, 0)
-     }
-   },
-   void: {
-     animationSlice: "height-layer", 
-     animationSliceOffset: 0, 
-     animationSliceDuration: 0, 
-     entrence: {
-       type: "visible", 
-       distance: new three.Vector3(0, 100, 0)
-     },
-     exit: {
-       type: "invisible", 
-       order: "instant", 
-       exitDelay: 0,
-       distance: new three.Vector3(0, -100, 0)
-     }
-   },
-   map: {
-     animationSlice: "map-distance", 
-     animationSliceOffset: 0,
-     animationSliceDuration: 0.5, 
-     entrence: {
-       type: "visible",
-       distance: new three.Vector3(0, 100, 0)
-     },
-     exit: {
-       type: "invisible", 
-       order: "instant", 
-       exitDelay: 0,
-       distance: new three.Vector3(0, -100, 0)
-     }
-   },
-   path: {
-     animationSlice: "solve-path",
-     animationSliceOffset: 0,
-     animationSliceDuration: 0.1, 
-     entrence: {
-       type: "visible", 
-       distance: new three.Vector3(0, 100, 0)
-     },
-     exit: {
-       type: "invisible", 
-       order: "instant",
-       exitDelay: 1,
-       distance: new three.Vector3(0, -100, 0)
-     }
-   }
-}
 
-clientMaze.generateAnimation(animationOptions)
-clientMaze.animationMixersAPI("addModel", scene)
-clientMaze.animationMixersAPI("play")
 
-clientMaze.animationMixersAPI("changeTimeScale", 4)
-const clock = new three.Clock()
 clientMaze.generateSpotLights(renderer, lightOptions)
 clientMaze.modelAPI("addLights", scene)
 renderer.setAnimationLoop(() => {
   controls.update()
-  clientMaze.animationMixersAPI("update", clock.getDelta())
   renderer.render(scene, camera)
 })
